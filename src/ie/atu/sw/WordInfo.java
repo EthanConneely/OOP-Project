@@ -1,5 +1,6 @@
 package ie.atu.sw;
 
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,9 +43,22 @@ public class WordInfo
         this.word = word;
     }
 
+    private WordDescriptions descriptions = new WordDescriptions();
+
+    public void setDescription(WordDescriptions descriptions)
+    {
+        this.descriptions = descriptions;
+    }
+
     @Override
     public String toString()
     {
-        return word + " " + pages.toString() + " " + count;
+        return word + "\n\tCount: " + count + "\n\tPages: " + pages.toString() + "\n\tDescriptions: \n\t\t" + descriptions;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return this.word.hashCode();
     }
 }

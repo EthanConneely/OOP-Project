@@ -83,14 +83,12 @@ public class Runner
 
     private static void execute()
     {
+        FileProcessor processor = new FileProcessor(inputFile, dictionaryFile, commonWordsFile, outputFile);
+        processor.load1000CommonWords();
+        processor.loadDictionary();
+
         while (true)
         {
-
-            int option;
-            FileProcessor processor = new FileProcessor(inputFile, dictionaryFile, commonWordsFile, outputFile);
-
-            processor.load1000CommonWords();
-
             processor.execute();
 
             System.out.println("");
@@ -102,7 +100,7 @@ public class Runner
             System.out.println("");
 
             // Output a menu of options and solicit text from the user
-            option = PromptRange("Select Option", 1, 5);
+            int option = PromptRange("Select Option", 1, 5);
 
             switch (option)
             {

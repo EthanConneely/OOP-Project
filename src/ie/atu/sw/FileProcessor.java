@@ -24,8 +24,9 @@ public class FileProcessor
     private File commonWordsFile;
 
     // http://infotechgems.blogspot.com/2011/11/java-collections-performance-time.html
-    private Map<String, WordInfo> words = new ConcurrentHashMap<>(); // Average O(1) other wise if there are collisions it uses a linked list
-    private Set<String> commonWords = new ConcurrentSkipListSet<>(); // O(log n) uses a tree acording to google
+    private Map<String, WordInfo> words = new ConcurrentHashMap<>(); // Average O(1)
+    private Set<String> commonWords = new ConcurrentSkipListSet<>(); // O(log n)
+    private Map<String, WordDescriptions> descriptionDictionary = new ConcurrentHashMap<>(); // Average O(1)
 
     private File dictionaryFile;
 
@@ -43,10 +44,34 @@ public class FileProcessor
 
     public void load1000CommonWords()
     {
-        System.out.println("Loading Dictionary...");
+        System.out.println("Loading Common Words...");
+
         try
         {
             commonWords.addAll(Files.lines(commonWordsFile.toPath()).toList());
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public void loadDictionary()
+    {
+        System.out.println("Loading Dictionary...");
+
+        try
+        {
+            Files.lines(dictionaryFile.toPath()).forEach(line ->
+            {
+                var parts = line.split(",");
+                if (parts.length >= 3)
+                {
+                    var word = descriptionDictionary.getOrDefault(parts[0].toLowerCase(), new WordDescriptions());
+                    word.addDescription(parts[1] + " " + parts[2]);
+                    descriptionDictionary.put(parts[0].toLowerCase(), word);
+                }
+            });
         }
         catch (IOException e)
         {
@@ -85,7 +110,17 @@ public class FileProcessor
             pool.shutdownNow();
         }
 
+        insertDescriptions();
+
         System.out.println("Finished Indexing!");
+    }
+
+    private void insertDescriptions()
+    {
+        for (var word : words.values())
+        {
+            word.setDescription(descriptionDictionary.get(word.getWord().toLowerCase()));
+        }
     }
 
     private void processLineThreaded(String line, int page)
@@ -140,6 +175,8 @@ public class FileProcessor
                     e.printStackTrace();
                 }
             });
+
+            outputStreamWriter.close();
         }
         catch (IOException e)
         {
@@ -161,6 +198,11 @@ public class FileProcessor
         }
     }
 
+    /**
+     * Will output to the output file the most frequntly occuring n words
+     *
+     * @param freq number of words to show
+     */
     public void outputMostFrequentWords(int freq)
     {
         System.out.println("Outputting Most Frequent Words");
@@ -172,21 +214,27 @@ public class FileProcessor
             // Sort the words
             Comparator<WordInfo> compare = (a, b) ->
             {
-                return a.getCount().compareTo(b.getCount());
+                return b.getCount().compareTo(a.getCount());
             };
 
-            // Output the most n frequent words
-            words.values().stream().sorted(compare).limit(freq).forEach(word ->
+            // Output the most n frequent words using an iterator because limit was blank
+            var wordIterator = words.values().stream().sorted(compare).iterator();
+
+            for (int i = 0; i < freq && wordIterator.hasNext(); i++)
             {
+                var word = wordIterator.next();
+
                 try
                 {
-                    outputStreamWriter.write(word.getWord() + "\n");
+                    outputStreamWriter.write(word.toString() + "\n");
                 }
                 catch (IOException e)
                 {
                     e.printStackTrace();
                 }
-            });
+            }
+
+            outputStreamWriter.close();
         }
         catch (IOException e)
         {
