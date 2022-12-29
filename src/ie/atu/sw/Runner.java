@@ -17,7 +17,12 @@ public class Runner
     static File commonWordsFile = new File("./google-1000.txt");
     static File outputFile = new File("./output.txt");
 
-    public static void main(String[] args) throws Exception
+    /**
+     * Main entry method
+     *
+     * @param args params
+     */
+    public static void main(String[] args)
     {
         f = new JFrame();
         f.setVisible(false);
@@ -47,7 +52,6 @@ public class Runner
             int option = PromptRange("Select Option", 1, 6);
 
             HandleMenu(option);
-
         }
     }
 
@@ -56,34 +60,34 @@ public class Runner
         switch (option)
         {
         case 1:
-            execute();
-            break;
+        execute();
+        break;
 
         case 2:
-            inputFile = PickFile("Pick Input Text File...", inputFile);
-            break;
+        inputFile = PickFile("Pick Input Text File...", inputFile);
+        break;
 
         case 3:
-            dictionaryFile = PickFile("Pick Dictionary File...", dictionaryFile);
-            break;
+        dictionaryFile = PickFile("Pick Dictionary File...", dictionaryFile);
+        break;
 
         case 4:
-            commonWordsFile = PickFile("Pick Common Words File...", commonWordsFile);
-            break;
+        commonWordsFile = PickFile("Pick Common Words File...", commonWordsFile);
+        break;
 
         case 5:
-            outputFile = PickFile("Pick Output File...", outputFile);
-            break;
+        outputFile = PickFile("Pick Output File...", outputFile);
+        break;
 
         case 6:
-            System.exit(0);
-            break;
+        System.exit(0);
+        break;
         }
     }
 
     private static void execute()
     {
-        FileProcessor processor = new FileProcessor(inputFile, dictionaryFile, commonWordsFile, outputFile);
+        Processor processor = new FileProcessor(inputFile, dictionaryFile, commonWordsFile, outputFile);
         processor.load1000CommonWords();
         processor.loadDictionary();
 
@@ -95,7 +99,7 @@ public class Runner
             System.out.println("1. Output all words ascending");
             System.out.println("2. Output all words descending");
             System.out.println("3. Output total number of unique words");
-            System.out.println("4. The top n most frequent / infrequent words");
+            System.out.println("4. The top n most frequent words");
             System.out.println("5. Exit");
             System.out.println("");
 
@@ -105,24 +109,24 @@ public class Runner
             switch (option)
             {
             case 1:
-                processor.outputAllWords(true);
-                break;
+            processor.outputAllWords(true);
+            break;
 
             case 2:
-                processor.outputAllWords(false);
-                break;
+            processor.outputAllWords(false);
+            break;
 
             case 3:
-                processor.outputUniqueWordsCount();
-                break;
+            processor.outputUniqueWordsCount();
+            break;
 
             case 4:
-                int freq = PromptRange("Input n frequent", 1);
-                processor.outputMostFrequentWords(freq);
-                break;
+            int freq = PromptRange("Input n frequent", 1);
+            processor.outputMostFrequentWords(freq);
+            break;
 
             case 5:
-                return;
+            return;
             }
         }
     }

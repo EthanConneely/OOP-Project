@@ -18,7 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class FileProcessor
+public class FileProcessor implements Processor
 {
     private File inputFile;
     private File commonWordsFile;
@@ -32,7 +32,7 @@ public class FileProcessor
 
     private File outputFile;
 
-    private AtomicInteger pageNumber = new AtomicInteger(1);
+    private AtomicInteger lineNumber = new AtomicInteger(1);
 
     public FileProcessor(File inputFile, File dictionaryFile, File commonWordsFile, File outputFile)
     {
@@ -42,6 +42,12 @@ public class FileProcessor
         this.outputFile = outputFile;
     }
 
+    /**
+     * Load the 1000 most common words
+     *
+     * O(n) because the more common words the longer it takes to add them all to the
+     * set
+     */
     public void load1000CommonWords()
     {
         System.out.println("Loading Common Words...");
@@ -56,6 +62,11 @@ public class FileProcessor
         }
     }
 
+    /**
+     * Load the word dictionary
+     *
+     * O(n) Loops through each line
+     */
     public void loadDictionary()
     {
         System.out.println("Loading Dictionary...");
@@ -79,6 +90,12 @@ public class FileProcessor
         }
     }
 
+    /**
+     * Runs the threaded executor service for processing the lines with virtual
+     * threads
+     *
+     * O(m) for the lines.foreach
+     */
     public void execute()
     {
         System.out.println("Started Indexing...");
@@ -89,7 +106,7 @@ public class FileProcessor
             {
                 Files.lines(inputFile.toPath()).forEach(line ->
                 {
-                    pool.execute(() -> processLineThreaded(line, pageNumber.getAndIncrement()));
+                    pool.execute(() -> processLineThreaded(line, (lineNumber.getAndIncrement() / 40)));
                 });
             }
             catch (Exception e)
@@ -97,8 +114,8 @@ public class FileProcessor
                 e.printStackTrace();
             }
 
+            // Handle thread shutdown
             pool.shutdown();
-
             try
             {
                 pool.awaitTermination(5, TimeUnit.SECONDS);
@@ -115,6 +132,11 @@ public class FileProcessor
         System.out.println("Finished Indexing!");
     }
 
+    /**
+     * Load in all the descriptions into the words
+     *
+     * O(n) single for loop
+     */
     private void insertDescriptions()
     {
         for (var word : words.values())
@@ -123,12 +145,18 @@ public class FileProcessor
         }
     }
 
+    /**
+     * Splits up a line into words and indexes them
+     *
+     * @param line the input line
+     * @param page the page number every 40 lines
+     */
     private void processLineThreaded(String line, int page)
     {
         Arrays.stream(line.split("\\s")).forEach(word ->
         {
             // Cleanup the words removing any white space and
-            // making it lowercase and removing none letters
+            // making it lowercase and removing non letters
             String processedWord = word.trim().toLowerCase().replaceAll("[^a-z]", "");
 
             if (!commonWords.contains(processedWord) && !processedWord.isEmpty())
@@ -141,6 +169,17 @@ public class FileProcessor
         });
     }
 
+    /**
+     * O(n log n) because we loop through all the words once in the .forEach O(n)
+     * because we loop through all the words once in the .forEach O(2n log n) and
+     * constant number are ignored so
+     *
+     * O(n log n) is the final time
+     *
+     * Ouput all the words sorted from a to z or z to a
+     *
+     * @param ascending sort ascending or descending
+     */
     public void outputAllWords(boolean ascending)
     {
         System.out.println("Outputting All Words");
@@ -184,6 +223,11 @@ public class FileProcessor
         }
     }
 
+    /**
+     * Output the Unique Words Count to the File
+     *
+     * O(n) the more lines the longer it takes to write
+     */
     public void outputUniqueWordsCount()
     {
         System.out.println("Outputting Words Count");
@@ -199,7 +243,7 @@ public class FileProcessor
     }
 
     /**
-     * Will output to the output file the most frequntly occuring n words
+     * Will output to the output file the most frequntly occuring words
      *
      * @param freq number of words to show
      */
